@@ -26,6 +26,7 @@ batch_size = 1
 
 scale = 100
 
+#Dimensions in metres
 D = 4.5
 H = 4.0
 W = 4.0
@@ -40,18 +41,28 @@ vD = 1.5
 vH = 0.4
 vW = 0.4
 
-#Grid Dim
-D_ = int(D / vD)
-H_ = int(H / vH)
-W_ = int(W / vW)
-
-T = 25
-
 #For converting co ordinates to integer
 #representing in a more scaled space
 D_size = int(D * scale)
 H_size = int(H * scale)
 W_size = int(W * scale)
+
+#Block Dim
+D_ = int(D / vD)
+H_ = int(H / vH)
+W_ = int(W / vW)
+
+#Grid Dim
+Dg = int(D_size / D_)
+Hg = int(H_size / H_)
+Wg = int(W_size / W_)
+
+print(Dg)
+
+
+T = 25
+
+
 
 #Check for index out of bounds since we are multiplying by 100 and putting values in indces
 #Assuming here that all the points are at equal intensity that is 1
@@ -155,11 +166,47 @@ def train(num_iteration):
         #x_valid_batch, y_valid_positions, y_valid_orientations, valid_labels = data.valid.next_batch(batch_size)
 
         for x_ in x_batch:
-            densex = tf.sparse_to_dense(sparse_indices=x_, output_shape=[D_size, H_size, W_size], sparse_values=1,validate_indices=False)
+            densex = tf.sparse_to_dense(sparse_indices=x_, output_shape=[D_size, H_size, W_size], sparse_values=x_[:, 1], validate_indices=False)
+            densey = tf.sparse_to_dense(sparse_indices=x_, output_shape=[D_size, H_size, W_size], sparse_values=x_[:, 2], validate_indices=False)
+            densez = tf.sparse_to_dense(sparse_indices=x_, output_shape=[D_size, H_size, W_size], sparse_values=x_[:, 3], validate_indices=False)
+
             # print(session.run(tf.shape(densex)))
             dense_batchx = tf.expand_dims(densex, 0)
+            dense_batchy = tf.expand_dims(densey, 0)
+            dense_batchz = tf.expand_dims(densez, 0)
+
             sliced_x = tf.space_to_batch_nd(dense_batchx, block_shape=[D_, H_, W_], paddings=tf.zeros(shape=[3, 2], dtype=tf.int32))
-            print(session.run(tf.shape(sliced_x)))
+            sliced_y = tf.space_to_batch_nd(dense_batchy, block_shape=[D_, H_, W_], paddings=tf.zeros(shape=[3, 2], dtype=tf.int32))
+            sliced_z = tf.space_to_batch_nd(dense_batchz, block_shape=[D_, H_, W_], paddings=tf.zeros(shape=[3, 2], dtype=tf.int32))
+
+            blocked_x = tf.transpose(sliced_x, perm=[1, 2, 3, 0])
+            blocked_y = tf.transpose(sliced_y, perm=[1, 2, 3, 0])
+            blocked_z = tf.transpose(sliced_z, perm=[1, 2, 3, 0])
+
+            # reduced mean for each array
+            # subtract either scalar or repmat only from non zero, either threshold or find idxs
+            # then concat final - - - 300 7
+
+            #Not sure how to sample 25 so taking all 300
+            # blocked_pt_x = tf.reshape(blocked_x, [Dg, Hg, Wg, D_, H_, W_])
+
+            #zero = tf.constant(0, dtype=tf.int32)
+            #where = tf.not_equal(blocked_pt_x, zero)
+
+            #indices = np.where(where.eval(session=session))
+            #indT = tf.constant(indices, shape=[6, 2500])
+            #print(D_, H_, W_)
+            #pos_featx = tf.reshape(indices, [Dg, Hg, Wg, D_, H_, W_])
+            #print(session.run((indT)))
+            # sparse = tf.SparseTensor(indices, tf.gather_nd(a_t, idx), a_t.get_shape())
+            # dense = tf.sparse_tensor_to_dense(sparse)
+
+            #just reshape to - - - 3 100
+            #tf reduce mean
+            #subtract scalar from each column
+            #tf concat
+
+            #print(session.run((pos_featx)))
 
         #print(len(x_batch_new))
         # feed_dict_tr = {x: x_batch,
