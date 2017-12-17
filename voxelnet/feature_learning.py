@@ -57,8 +57,8 @@ Dg = int(D_size / D_)
 Hg = int(H_size / H_)
 Wg = int(W_size / W_)
 
-print(Dg)
-
+print "Grid Dimensions: " +str(Dg) + ", " + str(Hg) + ", " + str(Wg)
+print "Block Dimensions: " +str(D_) + ", " + str(H_) + ", " + str(W_)
 
 T = 25
 
@@ -165,23 +165,81 @@ def train(num_iteration):
         x_batch, y_positions, y_orientations, train_labels = data.train.next_batch(batch_size)
         #x_valid_batch, y_valid_positions, y_valid_orientations, valid_labels = data.valid.next_batch(batch_size)
 
+        #Here to Line 2018 is new. All old code is still here, but is commented out
         for x_ in x_batch:
-            densex = tf.sparse_to_dense(sparse_indices=x_, output_shape=[D_size, H_size, W_size], sparse_values=x_[:, 1], validate_indices=False)
-            densey = tf.sparse_to_dense(sparse_indices=x_, output_shape=[D_size, H_size, W_size], sparse_values=x_[:, 2], validate_indices=False)
-            densez = tf.sparse_to_dense(sparse_indices=x_, output_shape=[D_size, H_size, W_size], sparse_values=x_[:, 3], validate_indices=False)
+            print "x_ size: " + str(x_.shape)
+            print "x_: " + str(x_)
 
+            pt_num = 0
+            voxel_ID_list = [np.array([])]*300
+            #voxel_ID_array = np.array([[x,y,z],[],[]],   [],   []) #ID*pt*(x,y,z)
+            #sort the points into voxels
+            for pt in x_:
+                print "pt "+str(pt_num)+ ": " + str(pt)
+                pt_num += 1
+                #compute the grid and block indices
+                gridX = pt[0]%Dg
+                blockX = int(pt[0] / Dg)
+                gridY = pt[1]%Hg
+                blockY = int(pt[1] / Hg)
+                gridZ = pt[2]%Wg
+                blockZ = int(pt[2] / Wg)
+
+                gridTuple = np.array([gridX,gridY,gridZ])
+
+                voxelID = blockZ + blockY*W_ + blockX*W_*H_
+                #print "blockX: "+str(blockX)+", blockY: "+str(blockY)+", blockZ: "+str(blockZ)
+                #print "Voxel ID: " + str(voxelID)
+
+                #add the point to the voxel list
+                print "gridTuple: " + str(gridTuple)
+                print "voxelList at id: " + str(voxel_ID_list[voxelID])
+                print "Length: " + str(len(voxel_ID_list[voxelID]))
+                if len(voxel_ID_list[voxelID]) == 0:
+                    print "Length 0"
+                    voxel_ID_list[voxelID] = [gridTuple]
+                elif len(voxel_ID_list[voxelID]) == 1:
+                    print "Length 1"
+                    voxel_ID_list[voxelID] = np.concatenate((voxel_ID_list[voxelID], [gridTuple]), axis=0)
+                else:
+                    print "Length > 1"
+                    voxel_ID_list[voxelID] = np.concatenate((voxel_ID_list[voxelID], [gridTuple]), axis=0)
+                #voxel_ID_list[voxelID].append(gridTuple)
+            for i in range(300):
+                print "array of IDs [" + str(i) + "]: " + str(len(voxel_ID_list[i]))
+            #for id in voxel_ID_list:
+            id = 63
+            #mean = np.mean(voxel_ID_list[id], axis=0)
+            mean = voxel_ID_list[id] - np.mean(voxel_ID_list[id],axis=0)
+            print "orig values of voxel 63: " + str(voxel_ID_list[id])
+            print "mean shifted values of voxel 63: " + str(mean)
+
+
+
+
+
+
+            #description of what densex,y,z are
+            # densex = tf.sparse_to_dense(sparse_indices=x_, output_shape=[D_size, H_size, W_size], sparse_values=x_[:, 0], validate_indices=False)
+            # densey = tf.sparse_to_dense(sparse_indices=x_, output_shape=[D_size, H_size, W_size], sparse_values=x_[:, 1], validate_indices=False)
+            # densez = tf.sparse_to_dense(sparse_indices=x_, output_shape=[D_size, H_size, W_size], sparse_values=x_[:, 2], validate_indices=False)
+
+            # print "densex: " + str(densex)
             # print(session.run(tf.shape(densex)))
-            dense_batchx = tf.expand_dims(densex, 0)
-            dense_batchy = tf.expand_dims(densey, 0)
-            dense_batchz = tf.expand_dims(densez, 0)
+            #description of next few varibles
+            # dense_batchx = tf.expand_dims(densex, 0)
+            # dense_batchy = tf.expand_dims(densey, 0)
+            # dense_batchz = tf.expand_dims(densez, 0)
 
-            sliced_x = tf.space_to_batch_nd(dense_batchx, block_shape=[D_, H_, W_], paddings=tf.zeros(shape=[3, 2], dtype=tf.int32))
-            sliced_y = tf.space_to_batch_nd(dense_batchy, block_shape=[D_, H_, W_], paddings=tf.zeros(shape=[3, 2], dtype=tf.int32))
-            sliced_z = tf.space_to_batch_nd(dense_batchz, block_shape=[D_, H_, W_], paddings=tf.zeros(shape=[3, 2], dtype=tf.int32))
+            #description of next few varibles
+            # sliced_x = tf.space_to_batch_nd(dense_batchx, block_shape=[D_, H_, W_], paddings=tf.zeros(shape=[3, 2], dtype=tf.int32))
+            # sliced_y = tf.space_to_batch_nd(dense_batchy, block_shape=[D_, H_, W_], paddings=tf.zeros(shape=[3, 2], dtype=tf.int32))
+            # sliced_z = tf.space_to_batch_nd(dense_batchz, block_shape=[D_, H_, W_], paddings=tf.zeros(shape=[3, 2], dtype=tf.int32))
 
-            blocked_x = tf.transpose(sliced_x, perm=[1, 2, 3, 0])
-            blocked_y = tf.transpose(sliced_y, perm=[1, 2, 3, 0])
-            blocked_z = tf.transpose(sliced_z, perm=[1, 2, 3, 0])
+            #description of next few varibles
+            # blocked_x = tf.transpose(sliced_x, perm=[1, 2, 3, 0])
+            # blocked_y = tf.transpose(sliced_y, perm=[1, 2, 3, 0])
+            # blocked_z = tf.transpose(sliced_z, perm=[1, 2, 3, 0])
 
             # reduced mean for each array
             # subtract either scalar or repmat only from non zero, either threshold or find idxs
