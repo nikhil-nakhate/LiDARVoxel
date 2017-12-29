@@ -9,7 +9,6 @@ import numpy as np
 # Adding Seed so that random initialization is consistent
 from numpy.random import seed
 
-
 #Path
 train_path = "data/example_data/"
 
@@ -61,8 +60,6 @@ print "Grid Dimensions: " +str(Dg) + ", " + str(Hg) + ", " + str(Wg)
 print "Block Dimensions: " +str(D_) + ", " + str(H_) + ", " + str(W_)
 
 T = 25
-
-
 
 #Check for index out of bounds since we are multiplying by 100 and putting values in indces
 #Assuming here that all the points are at equal intensity that is 1
@@ -178,14 +175,14 @@ def train(num_iteration):
                 print "pt "+str(pt_num)+ ": " + str(pt)
                 pt_num += 1
                 #compute the grid and block indices
-                gridX = pt[0]%Dg
+                gridX = pt[0] % Dg
                 blockX = int(pt[0] / Dg)
-                gridY = pt[1]%Hg
+                gridY = pt[1] % Hg
                 blockY = int(pt[1] / Hg)
-                gridZ = pt[2]%Wg
+                gridZ = pt[2] % Wg
                 blockZ = int(pt[2] / Wg)
 
-                gridTuple = np.array([gridX,gridY,gridZ])
+                gridTuple = np.array([gridX, gridY, gridZ])
 
                 voxelID = blockZ + blockY*W_ + blockX*W_*H_
                 #print "blockX: "+str(blockX)+", blockY: "+str(blockY)+", blockZ: "+str(blockZ)
@@ -207,16 +204,6 @@ def train(num_iteration):
                 #voxel_ID_list[voxelID].append(gridTuple)
             for i in range(300):
                 print "array of IDs [" + str(i) + "]: " + str(len(voxel_ID_list[i]))
-            #for id in voxel_ID_list:
-            id = 63
-            #mean = np.mean(voxel_ID_list[id], axis=0)
-            mean = voxel_ID_list[id] - np.mean(voxel_ID_list[id],axis=0)
-            print "orig values of voxel 63: " + str(voxel_ID_list[id])
-            print "mean shifted values of voxel 63: " + str(mean)
-
-
-
-
 
 
             #description of what densex,y,z are
