@@ -1,4 +1,8 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 import numpy as np
+import os
 import scipy.misc
 
 
@@ -8,19 +12,23 @@ num_classes = 2
 eval_split = 0.1
 
 # computed - do not change
-ftvec_per_class = num_ftvec_files / num_classes
+ftvec_per_class = num_ftvec_files // num_classes
 train_split = 1 - eval_split
 
 # pc = per class
-num_train_pc = train_split * ftvec_per_class
-num_eval_pc = eval_split * ftvec_per_class
+num_train_pc = int(train_split * ftvec_per_class)
+num_eval_pc = int(eval_split * ftvec_per_class)
+
+print(num_train_pc)
+print(num_eval_pc)
+print(ftvec_per_class)
 
 
 def get_feature_sets():
     train_features = []
 
     for file_num in range(0, num_ftvec_files):
-        filename = "featureVecs/train_"+str(file_num)+".txt"
+        filename = os.path.join("featureVecs", "train_"+str(file_num)+".txt")
         data = np.loadtxt(filename)
 
         if len(train_features) == 0:
@@ -30,6 +38,8 @@ def get_feature_sets():
 
     train_labels = np.append(np.ones(100), np.zeros(100))
 
+# setting the training and eval indices on the array of input data
+# example: train -> class1 = 0:90, class2 = 100:189 / similarly for eval
     i_train = np.r_[0:num_train_pc, ftvec_per_class:ftvec_per_class + num_train_pc]
     i_eval = np.r_[num_train_pc:num_train_pc + num_eval_pc, ftvec_per_class + num_train_pc: ftvec_per_class +
                                                                                             num_train_pc + num_eval_pc]
